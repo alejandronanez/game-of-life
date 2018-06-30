@@ -8,6 +8,7 @@ body {
 .wrapper {
   align-items: center;
   display: flex;
+  flex-direction: column;
   height: 100vh;
   justify-content: center;
 }
@@ -16,10 +17,11 @@ body {
   display: inline-block;
   height: 30px;
   width: 30px;
+  transition: background-color 250ms ease-in;
 }
 
 .cell--alive {
-  background-color: seagreen;
+  background-color: rgb(89, 221, 84);
 }
 
 .cell--dead {
