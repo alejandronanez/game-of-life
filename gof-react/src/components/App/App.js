@@ -12,7 +12,15 @@ export class App extends Component {
     generationCount: 0,
     intervalId: 0,
     grid: createGrid(this.rows),
-    aliveCells: [[0, 0], [0, 1], [1, 0], [1, 3], [2, 1], [2, 2], [2, 4]],
+    aliveCells: [
+      [0, 0],
+      [0, 1],
+      [1, 0],
+      [1, 3],
+      [2, 1],
+      [2, 2],
+      // New data
+    ],
   };
 
   componentDidMount() {
@@ -52,7 +60,7 @@ export class App extends Component {
   countAliveCells = neighbors =>
     neighbors.filter(([x, y]) => this.state.grid[x][y]).length;
 
-  shouldToggleCell = (totalAliveNeighbors, x, y) => {
+  shouldToggleCell = ({ totalAliveNeighbors, x, y }) => {
     const cell = this.state.grid[x][y];
 
     if (
@@ -67,7 +75,7 @@ export class App extends Component {
 
   scanGrid = () => {
     const newGrid = cloneArray(this.state.grid);
-    let totalOperations = 0;
+    let shouldGridChange = false;
 
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.rows; j++) {
@@ -75,19 +83,16 @@ export class App extends Component {
         const validNeighbors = this.validateNeighbors(neighbors);
         const totalAliveNeighbors = this.countAliveCells(validNeighbors);
 
-        if (this.shouldToggleCell(totalAliveNeighbors, i, j)) {
-          totalOperations++;
+        if (this.shouldToggleCell({ totalAliveNeighbors, x: i, y: j })) {
+          shouldGridChange = true;
           newGrid[i][j] = !newGrid[i][j];
         }
       }
     }
 
     // Should we continue playing?
-    if (totalOperations) {
-      this.setState(prevState => ({
-        generationCount: prevState.generationCount + 1,
-        grid: newGrid,
-      }));
+    if (shouldGridChange) {
+      this.updateGrid(newGrid);
     } else {
       this.endGame(this.state.intervalId);
     }
@@ -108,6 +113,13 @@ export class App extends Component {
       isPlaying: false,
       simulationComplete: true,
     });
+  };
+
+  updateGrid = newGrid => {
+    this.setState(prevState => ({
+      generationCount: prevState.generationCount + 1,
+      grid: newGrid,
+    }));
   };
 
   render() {

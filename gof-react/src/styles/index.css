@@ -17,7 +17,7 @@ body {
   display: inline-block;
   height: 30px;
   width: 30px;
-  transition: background-color 250ms ease-in;
+  transition: background-color 150ms ease-in;
 }
 
 .cell--alive {
