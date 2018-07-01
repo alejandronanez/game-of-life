@@ -21,9 +21,30 @@ body {
 }
 
 .cell--alive {
-  background-color: rgb(89, 221, 84);
+  background-color: #2292a4;
 }
 
 .cell--dead {
-  background-color: gainsboro;
+  background-color: #d3cece;
+}
+
+.btn {
+  background-color: #d96c06;
+  border: none;
+  color: #f5efed;
+  font-size: 18px;
+  font-weight: 500;
+  margin-top: 20px;
+  padding: 10px;
+  text-transform: uppercase;
+  transition: opacity 100ms ease-in;
+}
+
+.btn:hover {
+  cursor: pointer;
+}
+
+.btn:disabled {
+  cursor: default;
+  opacity: 0.5;
 }

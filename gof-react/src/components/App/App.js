@@ -1,15 +1,18 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import Grid from 'components/Grid';
 import { createGrid, cloneArray } from 'helpers';
 
 export class App extends Component {
-  rows = 4;
+  rows = 10;
+  timeout = 500;
 
   state = {
+    isisPlaying: false,
+    simulationComplete: false,
     generationCount: 0,
     intervalId: 0,
-    grid: createGrid(this.rows, this.rows),
-    aliveCells: [[0, 0], [0, 1], [1, 0], [1, 3], [2, 1], [2, 2], [3, 1]],
+    grid: createGrid(this.rows),
+    aliveCells: [[0, 0], [0, 1], [1, 0], [1, 3], [2, 1], [2, 2], [2, 4]],
   };
 
   componentDidMount() {
@@ -30,80 +33,101 @@ export class App extends Component {
     this.setState({ grid });
   };
 
-  getNeighbors = (x, y) => {
-    return [
-      [x - 1, y - 1],
-      [x - 1, y],
-      [x - 1, y + 1],
-      [x, y - 1],
-      [x, y + 1],
-      [x + 1, y - 1],
-      [x + 1, y],
-      [x + 1, y + 1],
-    ];
-  };
+  getNeighbors = (x, y) => [
+    [x - 1, y - 1],
+    [x - 1, y],
+    [x - 1, y + 1],
+    [x, y - 1],
+    [x, y + 1],
+    [x + 1, y - 1],
+    [x + 1, y],
+    [x + 1, y + 1],
+  ];
 
-  validateNeighbors = neighbors => {
-    return neighbors.filter(coord => {
-      return !(coord.includes(-1) || coord.includes(this.rows));
-    });
-  };
+  validateNeighbors = neighbors =>
+    neighbors.filter(
+      coord => !(coord.includes(-1) || coord.includes(this.rows))
+    );
 
-  countAliveCells = neighbors => {
-    return neighbors.filter(([x, y]) => {
-      return this.state.grid[x][y];
-    }).length;
-  };
+  countAliveCells = neighbors =>
+    neighbors.filter(([x, y]) => this.state.grid[x][y]).length;
 
   shouldToggleCell = (totalAliveNeighbors, x, y) => {
     const cell = this.state.grid[x][y];
 
-    if (cell && (totalAliveNeighbors < 2 || totalAliveNeighbors > 3)) {
+    if (
+      (cell && (totalAliveNeighbors < 2 || totalAliveNeighbors > 3)) ||
+      (!cell && totalAliveNeighbors === 3)
+    ) {
       return true;
     }
 
-    if (!cell && totalAliveNeighbors === 3) {
-      return true;
-    }
+    return false;
   };
 
   scanGrid = () => {
     const newGrid = cloneArray(this.state.grid);
+    let totalOperations = 0;
 
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.rows; j++) {
         const neighbors = this.getNeighbors(i, j);
         const validNeighbors = this.validateNeighbors(neighbors);
         const totalAliveNeighbors = this.countAliveCells(validNeighbors);
+
         if (this.shouldToggleCell(totalAliveNeighbors, i, j)) {
+          totalOperations++;
           newGrid[i][j] = !newGrid[i][j];
         }
       }
     }
 
-    this.setState(prevState => ({
-      generationCount: prevState.generationCount + 1,
-      grid: newGrid,
-    }));
+    // Should we continue playing?
+    if (totalOperations) {
+      this.setState(prevState => ({
+        generationCount: prevState.generationCount + 1,
+        grid: newGrid,
+      }));
+    } else {
+      this.endGame(this.state.intervalId);
+    }
   };
 
   startGame = () => {
-    const intervalId = setInterval(() => this.scanGrid(), 1000);
+    const intervalId = setInterval(this.scanGrid, this.timeout);
 
-    this.setState({ intervalId });
+    this.setState({
+      intervalId,
+      isPlaying: true,
+    });
   };
 
-  pauseGame = () => {
-    clearInterval(this.state.intervalId);
+  endGame = intervalId => {
+    clearInterval(intervalId);
+    this.setState({
+      isPlaying: false,
+      simulationComplete: true,
+    });
   };
 
   render() {
+    /* eslint-disable indent */
+    const { isPlaying, simulationComplete } = this.state;
+
     return (
       <div className="wrapper">
-        <h1>{this.state.generationCount} Generations</h1>
+        <h1>Generations: {this.state.generationCount}</h1>
         <Grid grid={this.state.grid} />
-        <button onClick={this.startGame}>Play</button>
-        <button onClick={this.pauseGame}>Pause</button>
+        <button
+          className="btn"
+          disabled={isPlaying || simulationComplete}
+          onClick={isPlaying ? () => {} : this.startGame}
+        >
+          {simulationComplete && <Fragment>Simulation completed</Fragment>}
+          {!simulationComplete && isPlaying && <Fragment>Simulating</Fragment>}
+          {!simulationComplete &&
+            !isPlaying && <Fragment>Start simulation</Fragment>}
+        </button>
       </div>
     );
   }
